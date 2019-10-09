@@ -51,15 +51,24 @@ def handle():
             raise ValueError(
                 f'No image source found in request fields: {data.keys()}')
 
+        mask2 = np.zeros(shape=(segmentator.size[0],segmentator.size[1], 4), dtype=np.uint8)
+        mask2[:, :, :3] = img.resize(segmentator.size[::-1])
+
         mask = segmentator.predict(img)
         mask = (mask * 255).astype(np.uint8)
+        mask2[:, :, 3] = mask
 
         fmem = io.BytesIO()
         imsave(fmem, mask, 'png')
         fmem.seek(0)
         mask64 = base64.b64encode(fmem.read()).decode('utf-8')
 
-        result['data'] = {'mask': mask64}
+        fmem2 = io.BytesIO()
+        imsave(fmem2, mask2, 'png')
+        fmem2.seek(0)
+        mask64_2 = base64.b64encode(fmem2.read()).decode('utf-8')
+
+        result['data'] = {'mask': mask64, 'mask2': mask64_2}
         result['success'] = True
     except Exception as e:
         logger.exception(e)

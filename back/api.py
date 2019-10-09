@@ -17,6 +17,7 @@ class Segmentator(object):
     normalize = transforms.Normalize(**meanstd)
     preprocess = transforms.Compose([
         transforms.Resize(size),
+        #transforms.CenterCrop(size),
         transforms.ToTensor(),
         normalize
     ])
@@ -25,6 +26,7 @@ class Segmentator(object):
         self.net = torch.jit.load(name)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.net.to(self.device)
+        self.net.eval()
 
     @torch.no_grad()
     def predict(self, image):

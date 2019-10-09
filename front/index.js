@@ -41,12 +41,14 @@ var app = new Vue({
         preview: true,
         state: "ready",
         error: "",
-        mask: ""
+        mask: "",
+        mask2: ""
     },
     methods: {
         clear: function () {
             this.error = "";
             this.mask = "";
+            this.mask2 = "";
         },
         segment: function () {
             var vm = this;
@@ -62,6 +64,7 @@ var app = new Vue({
 
                 if (result["success"]) {
                     vm.mask = result["data"]["mask"];
+		    vm.mask2 = result["data"]["mask2"];
                 } else {
                     vm.error = result["message"];
                     if (!vm.error) {
