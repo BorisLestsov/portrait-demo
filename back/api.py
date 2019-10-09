@@ -4,31 +4,11 @@ Made by @nizhib
 
 import torch
 from torchvision import transforms
-
-from models import unet_resnext50
-
-
-def sanitize(state_dict):
-    cpu = torch.device('cpu')
-    sanitized = dict()
-    for key in state_dict:
-        if key.startswith('module.'):
-            sanitized[key[7:]] = state_dict[key].to(cpu)
-        else:
-            sanitized[key] = state_dict[key].to(cpu)
-    return sanitized
-
-
-def load_state(path):
-    state = torch.load(path, map_location='cpu')
-    if 'state_dict' in state:
-        state = state['state_dict']
-    state = sanitize(state)
-    return state
+from PIL import Image
 
 
 class Segmentator(object):
-    size = (320, 240)
+    size = (400, 300)
 
     meanstd = {
         'mean': [0.485, 0.456, 0.406],
@@ -37,25 +17,31 @@ class Segmentator(object):
     normalize = transforms.Normalize(**meanstd)
     preprocess = transforms.Compose([
         transforms.Resize(size),
-        transforms.Pad((8, 0), padding_mode='reflect'),
         transforms.ToTensor(),
         normalize
     ])
 
-    def __init__(self):
-        self.net = unet_resnext50(num_classes=1)
+    def __init__(self, name):
+        self.net = torch.jit.load(name)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-    def load(self, checkpoint_path):
-        state = load_state(checkpoint_path)
-        self.net.load_state_dict(state)
-        self.net.eval()
         self.net.to(self.device)
 
     @torch.no_grad()
     def predict(self, image):
         image = self.preprocess(image)
         tensor = torch.stack((image,)).to(self.device)
-        logits = self.net(tensor)
-        probs = torch.sigmoid(logits).data[0, 0, :, 8:-8].to('cpu').numpy()
+        _, logits = self.net(tensor)
+        probs = torch.nn.functional.softmax(logits, dim=1).cpu().numpy()[0, 1, ...]
         return probs
+
+
+def main():
+    seg = Segmentator("scriptmodule.pt")
+
+    tmp = numpy.random.rand(800,600,3) * 255
+    tmp = Image.fromarray(imarray.astype('uint8')).convert('RGB')
+    out = seg.predict(tmp)
+
+
+if __name__=="__main__":
+    main()

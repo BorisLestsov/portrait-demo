@@ -1,15 +1,31 @@
 version: "3.5"
 
 services:
+  traefik:
+    image: traefik:1.7
+    command: --api --docker --logLevel=INFO
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - nizhib
+    ports:
+      - 80:80
+    labels:
+      - traefik.back=traefik
+      - traefik.port=8080
+      - traefik.frontend.rule=Host:traefik.dl2019fall-lestsov.ml
+    container_name: traefik
+
   portrait-front:
     image: nginx:1.17-alpine
     volumes:
       - ./front:/usr/share/nginx/html:ro
     networks:
-      - nizhib
+      nizhib:
+    restart: always
     expose:
       - 80
-    restart: always
     labels:
       - traefik.enable=true
       - traefik.frontend.rule=Host:dl2019fall-lestsov.ml
@@ -18,11 +34,11 @@ services:
     build:
       context: back
       dockerfile: Dockerfile
+    restart: always
     networks:
       - nizhib
     expose:
       - 5000
-    restart: always
     labels:
       - traefik.enable=true
       - traefik.frontend.rule=Host:dl2019fall-lestsov.ml;PathPrefix:/api;PathPrefixStrip:/api

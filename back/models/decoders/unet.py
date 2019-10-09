@@ -48,4 +48,5 @@ class UNetDecoder(nn.Module):
         up = acts[-1]
         for left, block in zip(acts[-2::-1], self.blocks):
             up = block(up, left)
+        del acts[:]
         return up

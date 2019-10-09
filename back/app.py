@@ -19,14 +19,14 @@ from PIL import Image
 from waitress import serve
 
 from api import Segmentator
+import gc
 
 LOGGING_LEVEL = 'INFO'
 LOGGING_FORMAT = '[%(asctime)s] %(name)s:%(lineno)d: %(message)s'
 
 logging.basicConfig(format=LOGGING_FORMAT, level=LOGGING_LEVEL)
 
-segmentator = Segmentator()
-segmentator.load('resource/unet_resnext50.pth')
+segmentator = Segmentator("resource/scriptmodule.pt")
 
 app = Flask(__name__)
 logger = logging.getLogger(__file__)
@@ -35,6 +35,7 @@ logger = logging.getLogger(__file__)
 @app.route('/segment', methods=['POST'])
 def handle():
     start = time.time()
+    gc.collect()
     status = HTTPStatus.OK
     result = {'success': False}
 
